@@ -10,7 +10,7 @@ for i in f.readlines():
 		to_run_on.append([(a,0)])
 f.close()
 
-to_run_on = [[("/m/025n3p",0)]]
+# to_run_on = [[("/m/025n3p",0)]]
 def wiki_extract(title):	
 	title = " ".join(title.split('_'))
 	ny = wikipedia.page(title)
@@ -58,6 +58,7 @@ iteration = 0
 count = 0
 total = 0
 data = []
+f = open("cur_data", "w")
 for q in to_run_on:
 	# if iteration%10 == 1:
 		# print("-----------------------------------------", iteration)
@@ -86,8 +87,10 @@ for q in to_run_on:
 	# data.append((my_name, set(selected_ents), final_sentence))
 	print(set(selected_ents))
 	print(final_sentence)
+	f.write(" ".join(selected_ents) + "\t" + final_sentence + "\n")
 	# print((my_name, set(selected_ents), final_sentence))
 	# total += len(final_sentence.split())/2
 	# for i in graph_ents:
 	# 	if i in final_sentence:
-	# 		count += 1
+	# 		count += 1	
+f.close()
