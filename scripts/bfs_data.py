@@ -63,7 +63,7 @@ iteration = 0
 count = 0
 total = 0
 data = []
-f = open("cur_data", "w")
+f = open("cur_data.txt", "w")
 fbgraph = Graph()
 relations = {}
 for q in to_run_on:
@@ -116,10 +116,13 @@ for q in to_run_on:
 	# f.write("\n".join([str(i) for i in list(set(our_graph_edges))]))
 	# f.write(" ".join(list(set(selected_ents))) + "\t" + final_sentence + "\n")
 	f.write(my_name + "\t")
-	f.write(";".join(full_entities) + "\t")
+	f.write(" ; ".join(full_entities) + "\t")
 	f.write(" ".join(["<garbage>" for i in range(len(list(set(selected_ents))))]) + "\t")
-	f.write(";".join([str(full_entities.index(a)) + " " + str(relations[b]) + " " + str(full_entities.index(c)) for (a,b,c) in our_graph_edges]) + "\t")
-	# f.write() #Atishyas work
+	f.write(" ; ".join([str(full_entities.index(a)) + " " + str(relations[b]) + " " + str(full_entities.index(c)) for (a,b,c) in our_graph_edges]) + "\t")
+	for ent in list(set(selected_ents)):
+		st_ind = final_sentence.find(' '+ent+' ')
+		final_sentence = final_sentence[:st_ind]+ " <garbage_" + str(full_entities.index(ent)) + "> " +final_sentence[st_ind+len(ent)+2:]
+	f.write(final_sentence+"\t") #Atishyas work
 	f.write("-1\n")
 	# print((my_name, set(selected_ents), final_sentence))
 	# total += len(final_sentence.split())/2
