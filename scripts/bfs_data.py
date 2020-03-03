@@ -65,6 +65,7 @@ total = 0
 data = []
 f = open("cur_data", "w")
 fbgraph = Graph()
+relations = {}
 for q in to_run_on:
 	# if iteration%10 == 1:
 		# print("-----------------------------------------", iteration)
@@ -97,12 +98,29 @@ for q in to_run_on:
 		# if total_characters >= 500:
 		# 	break
 	# print (our_graph_edges)
+	full_entities = []
+	for i in list(set(selected_ents)):
+		full_entities.append(i)
+	for i in our_graph_edges:
+		if (i[0] not in full_entities):
+			full_entities.append(i[0])
+		if (i[2] not in full_entities):
+			full_entities.append(i[2])
+		if (i[1] not in relations):
+			relations[i[1]] = len(relations)
+	print (full_entities)
 	final_sentence = ' '.join(final_sentence)
 	# data.append((my_name, set(selected_ents), final_sentence))
 	print(set(selected_ents))
 	print(final_sentence)
-	f.write("\n".join([str(i) for i in list(set(our_graph_edges))]))
-	f.write(" ".join(list(set(selected_ents))) + "\t" + final_sentence + "\n")
+	# f.write("\n".join([str(i) for i in list(set(our_graph_edges))]))
+	# f.write(" ".join(list(set(selected_ents))) + "\t" + final_sentence + "\n")
+	f.write(my_name + "\t")
+	f.write(";".join(full_entities) + "\t")
+	f.write(" ".join(["<garbage>" for i in range(len(list(set(selected_ents))))]) + "\t")
+	f.write(";".join([str(full_entities.index(a)) + " " + str(relations[b]) + " " + str(full_entities.index(c)) for (a,b,c) in our_graph_edges]) + "\t")
+	# f.write() #Atishyas work
+	f.write("-1\n")
 	# print((my_name, set(selected_ents), final_sentence))
 	# total += len(final_sentence.split())/2
 	# for i in graph_ents:
