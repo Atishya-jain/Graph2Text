@@ -10,7 +10,7 @@ for i in f.readlines():
 		to_run_on.append([(a,0,[])])
 f.close()
 
-to_run_on = [[("/m/025n3p",0,[])]]
+#to_run_on = [[("/m/025n3p",0,[])]]
 def wiki_extract(title):	
 	title = " ".join(title.split('_'))
 	ny = wikipedia.page(title)
@@ -67,66 +67,76 @@ f = open("cur_data.txt", "w")
 fbgraph = Graph()
 relations = {}
 for q in to_run_on:
+	try:
 	# if iteration%10 == 1:
 		# print("-----------------------------------------", iteration)
 		# print("Match percent:", (count/total)*100)
-	iteration += 1
-	graph_ents, my_name = graph(q, fbgraph)
-	sentences = wiki_extract(my_name)
-	# print(graph_ents)
-	final_sentence = []
-	selected_ents = []
-	total_characters = 0
-	# print(sentences)
-	our_graph_edges = []
-	for i in sentences:
-		flag = False
-		total_characters += len(i)
-		for j in graph_ents:
-			if " " + j[0] + " " in i:
-				if not flag:
-					final_sentence.append(i.strip())
-					flag = True
-				selected_ents.append(j[0])
-				assert len(j[1]) <= 2
-				if (len(j[1]) == 1):
-					our_graph_edges.append((j[1][0][0],j[1][0][1],j[0]))
-				elif (len(j[1]) == 2):
-					our_graph_edges.append((j[1][0][0],j[1][0][1],j[0]))
-					our_graph_edges.append((j[1][1][0],j[1][1][1],j[1][0][0]))
-				# break
-		# if total_characters >= 500:
-		# 	break
-	# print (our_graph_edges)
-	full_entities = []
-	for i in list(set(selected_ents)):
-		full_entities.append(i)
-	for i in our_graph_edges:
-		if (i[0] not in full_entities):
-			full_entities.append(i[0])
-		if (i[2] not in full_entities):
-			full_entities.append(i[2])
-		if (i[1] not in relations):
-			relations[i[1]] = len(relations)
-	print (full_entities)
-	final_sentence = ' '.join(final_sentence)
-	# data.append((my_name, set(selected_ents), final_sentence))
-	print(set(selected_ents))
-	print(final_sentence)
-	# f.write("\n".join([str(i) for i in list(set(our_graph_edges))]))
-	# f.write(" ".join(list(set(selected_ents))) + "\t" + final_sentence + "\n")
-	f.write(my_name + "\t")
-	f.write(" ; ".join(full_entities) + "\t")
-	f.write(" ".join(["<garbage>" for i in range(len(list(set(selected_ents))))]) + "\t")
-	f.write(" ; ".join([str(full_entities.index(a)) + " " + str(relations[b]) + " " + str(full_entities.index(c)) for (a,b,c) in our_graph_edges]) + "\t")
-	for ent in list(set(selected_ents)):
-		st_ind = final_sentence.find(' '+ent+' ')
-		final_sentence = final_sentence[:st_ind]+ " <garbage_" + str(full_entities.index(ent)) + "> " +final_sentence[st_ind+len(ent)+2:]
-	f.write(final_sentence+"\t") #Atishyas work
-	f.write("-1\n")
-	# print((my_name, set(selected_ents), final_sentence))
-	# total += len(final_sentence.split())/2
-	# for i in graph_ents:
-	# 	if i in final_sentence:
-	# 		count += 1	
+		iteration += 1
+		graph_ents, my_name = graph(q, fbgraph)
+		sentences = wiki_extract(my_name)
+		# print(graph_ents)
+		final_sentence = []
+		selected_ents = []
+		total_characters = 0
+		# print(sentences)
+		our_graph_edges = []
+		for i in sentences:
+			flag = False
+			total_characters += len(i)
+			for j in graph_ents:
+				if " " + j[0] + " " in i:
+					if not flag:
+						final_sentence.append(i.strip())
+						flag = True
+					selected_ents.append(j[0])
+					assert len(j[1]) <= 2
+					if (len(j[1]) == 1):
+						our_graph_edges.append((j[1][0][0],j[1][0][1],j[0]))
+					elif (len(j[1]) == 2):
+						our_graph_edges.append((j[1][0][0],j[1][0][1],j[0]))
+						our_graph_edges.append((j[1][1][0],j[1][1][1],j[1][0][0]))
+					# break
+			# if total_characters >= 500:
+			# 	break
+		# print (our_graph_edges)
+		full_entities = []
+		for i in list(set(selected_ents)):
+			full_entities.append(i)
+		for i in our_graph_edges:
+			if (i[0] not in full_entities):
+				full_entities.append(i[0])
+			if (i[2] not in full_entities):
+				full_entities.append(i[2])
+			if (i[1] not in relations):
+				relations[i[1]] = len(relations)
+		print (full_entities)
+		final_sentence = ' '.join(final_sentence)
+		# data.append((my_name, set(selected_ents), final_sentence))
+		print(set(selected_ents))
+		print(final_sentence)
+		# f.write("\n".join([str(i) for i in list(set(our_graph_edges))]))
+		# f.write(" ".join(list(set(selected_ents))) + "\t" + final_sentence + "\n")
+		f.write(my_name + "\t")
+		f.write(" ; ".join(full_entities) + "\t")
+		f.write(" ".join(["<garbage>" for i in range(len(list(set(selected_ents))))]) + "\t")
+		f.write(" ; ".join([str(full_entities.index(a)) + " " + str(relations[b]) + " " + str(full_entities.index(c)) for (a,b,c) in our_graph_edges]) + "\t")
+		for ent in list(set(selected_ents)):
+			st_ind = final_sentence.find(' '+ent+' ')
+			final_sentence = final_sentence[:st_ind]+ " <garbage_" + str(full_entities.index(ent)) + "> " +final_sentence[st_ind+len(ent)+2:]
+		f.write(final_sentence+"\t") #Atishyas work
+		f.write("0 -1 0 -1 0 -1 0\n")
+
+		f2 = open('relations.vocab', 'w')
+		for i in list(relations.keys()):
+			f2.write(i+"\n")
+		f2.close()
+		# print(list(relations.keys()))
+		# print((my_name, set(selected_ents), final_sentence))
+		# total += len(final_sentence.split())/2
+		# for i in graph_ents:
+		# 	if i in final_sentence:
+		# 		count += 1	
+	except Exception as e:
+		print(e)
+		continue
 f.close()
