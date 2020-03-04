@@ -113,6 +113,7 @@ for q in to_run_on:
 		final_sentence = ' '.join(final_sentence)
 		# data.append((my_name, set(selected_ents), final_sentence))
 		print(set(selected_ents))
+		selected_ents = list(set(selected_ents))
 		print(final_sentence)
 		# f.write("\n".join([str(i) for i in list(set(our_graph_edges))]))
 		# f.write(" ".join(list(set(selected_ents))) + "\t" + final_sentence + "\n")
