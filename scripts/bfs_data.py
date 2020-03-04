@@ -122,7 +122,7 @@ for q in to_run_on:
 		f.write(" ; ".join([str(selected_ents.index(a)) + " " + str(relations[b]) + " " + str(selected_ents.index(c)) for (a,b,c) in our_graph_edges]) + "\t")
 		for ent in list(set(selected_ents)):
 			st_ind = final_sentence.find(' '+ent+' ')
-			final_sentence = final_sentence[:st_ind]+ " <garbage_" + str(full_entities.index(ent)) + "> " +final_sentence[st_ind+len(ent)+2:]
+			final_sentence = final_sentence[:st_ind]+ " <garbage_" + str(selected_ents.index(ent)) + "> " +final_sentence[st_ind+len(ent)+2:]
 		f.write(final_sentence+"\t") #Atishyas work
 		f.write("0 -1 0 -1 0 -1 0\n")
 
