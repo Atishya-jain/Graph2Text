@@ -1,12 +1,11 @@
 import torch
 from collections import Counter
-import dill
+#import dill
 from torchtext import data
 import pargs as arg
 from copy import copy
 
 class dataset:
-
   def __init__(self, args):
     args.path = args.datadir + args.data
     print("Loading Data from ",args.path)

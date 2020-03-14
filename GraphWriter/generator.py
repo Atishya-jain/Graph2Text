@@ -25,7 +25,9 @@ def test(args,ds,m,epoch='cmdline'):
   k = 0
   data = ds.mktestset(args)
   ofn = "../outputs/"+model+".inputs.beam_predictions."+epoch
+  gfn = "../outputs/"+model+".inputs.beam_gold."+epoch
   pf = open(ofn,'w')
+  gf = open(gfn,'w')
   preds = []
   golds = []
   for b in data:
@@ -42,13 +44,14 @@ def test(args,ds,m,epoch='cmdline'):
     gen = ds.reverse(gen.done[0].words,b.rawent)
     k+=1
     gold = ds.reverse(b.tgt[0][1:],b.rawent)
-    print(gold)
-    print(gen)
-    print()
+    #print(gold)
+    #print(gen)
+    #print()
     preds.append(gen.lower())
     golds.append(gold.lower())
     #tf.write(ent+'\n')
     pf.write(gen.lower()+'\n')
+    gf.write(gold.lower()+'\n')
   m.train()
   return preds,golds
 

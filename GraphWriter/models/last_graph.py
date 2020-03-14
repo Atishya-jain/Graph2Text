@@ -33,7 +33,6 @@ class graph_encode(nn.Module):
   def __init__(self,args):
     super().__init__()
     self.args = args
-    # Potential change
     self.renc = nn.Embedding(args.rtoks,args.hsz)
     nn.init.xavier_normal_(self.renc.weight)
 
@@ -62,9 +61,19 @@ class graph_encode(nn.Module):
     if self.args.entdetach:
       vents = torch.tensor(vents,requires_grad=False)
     vrels = [self.renc(x) for x in rels]
+    # import pdb
+    # pdb.set_trace()
+    # print("HI", vrels[0].shape)
+    # print("HI", self.args.rtoks)
+    # print("HI", rels)
     glob = []
     graphs = []
     for i,adj in enumerate(adjs):
+      # import pdb
+      # pdb.set_trace()
+      # print(vents[i][:entlens][i].shape)
+      # print(vrels[i].shape)
+      
       vgraph = torch.cat((vents[i][:entlens[i]],vrels[i]),0)
       N = vgraph.size(0)
       if self.sparse:
@@ -84,6 +93,7 @@ class graph_encode(nn.Module):
           #print(ngraph.size(),vgraph.size(),mask.size())
           vgraph = self.gat[j](vgraph.unsqueeze(1),ngraph,mask)
         else:
+          # print(N)
           ngraph = torch.tensor(vgraph.repeat(N,1).view(N,N,-1),requires_grad=False)
           vgraph = self.gat[j](vgraph.unsqueeze(1),ngraph,mask)
           if self.args.model == 'gat':

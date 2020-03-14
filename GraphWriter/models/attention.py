@@ -18,10 +18,11 @@ class MatrixAttn(nn.Module):
 
   def forward(self,dec,emb):
     emb,elen = emb
+    print (emb.size())
     # dev = emb.get_device()
     # emask and emb should be in the same device 
     emask = torch.arange(0,emb.size(1)).unsqueeze(0).repeat(emb.size(0),1).long().to(self.get_device())
-    
+    print (elen)
     emask = (emask >= elen.unsqueeze(1)).unsqueeze(1)
     decsmall = self.attnlin(dec)
     unnorm = torch.bmm(decsmall,emb.transpose(1,2))

@@ -108,7 +108,6 @@ class gat_encode(nn.Module):
   def __init__(self,args):
     super().__init__()
     self.lenc = list_encode(args)
-    # Potential change for relation/edges
     self.renc = nn.Embedding(args.rtoks,args.hsz)
     nn.init.xavier_normal_(self.renc.weight)
     #self.gat = GAT(args.hsz, args.hsz, args.hsz, args.gdrop, 0.2, 3)

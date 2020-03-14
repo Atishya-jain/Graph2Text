@@ -38,6 +38,7 @@ class model(nn.Module):
     ents = b.ent
     entlens = ents[2]
     ents = self.le(ents)
+    # print (ents.size())
     if self.graph:
       gents,glob,grels = self.ge(b.rel[0],b.rel[1],(ents,entlens))
       hx = glob
@@ -67,6 +68,7 @@ class model(nn.Module):
       a = torch.cat((a,a2),1)
     #e = outp.transpose(0,1)
     e = self.emb(outp).transpose(0,1)
+    # print (e.size())
     outputs = []
     for i, k in enumerate(e):
       #k = self.emb(k)
@@ -88,6 +90,7 @@ class model(nn.Module):
       out = torch.cat((hx,a),1)
       outputs.append(out)
     l = torch.stack(outputs,1)
+    # print (l.size())
     s = torch.sigmoid(self.switch(l))
     o = self.out(l)
     o = torch.softmax(o,2)

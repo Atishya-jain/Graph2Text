@@ -26,6 +26,7 @@ def train(m,o,ds,args):
   for spl, train_iter in trainorder:
     print(spl)
     for count,b in enumerate(train_iter):
+      #print(count)
       if count%100==99:
         print(ex,"of like 40k -- current avg loss ",(loss/ex))
       b = ds.fixBatch(b)
