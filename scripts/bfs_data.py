@@ -100,6 +100,7 @@ for q in to_run_on:
 		# 	break
 	# print (our_graph_edges)
 	selected_ents = list(set(selected_ents))
+	selected_ents.sort(key=len, reverse=True)
 	full_entities = []
 	for i in selected_ents:
 		full_entities.append(i)
@@ -131,7 +132,7 @@ for q in to_run_on:
 	# print (full_entities)
 	final_sentence = ' '.join(final_sentence)
 	# data.append((my_name, set(selected_ents), final_sentence))
-	print(set(selected_ents))
+	print(selected_ents)
 	print(final_sentence)
 	# f.write("\n".join([str(i) for i in list(set(our_graph_edges))]))
 	# f.write(" ".join(list(set(selected_ents))) + "\t" + final_sentence + "\n")
@@ -141,12 +142,15 @@ for q in to_run_on:
 	l = []
 	for (a,b,c) in our_graph_edges:
 		if (a in full_entities and c in full_entities):
-			l.append(str(full_entities.index(a)) + " " + str(relations[b]) + " " + str(full_entities.index(c)))
-	f.write(" ; ".join(l))
+			l.append(str(full_entities.index(a)+1) + " " + str(relations[b]) + " " + str(full_entities.index(c)+1))
+	l = list(set(l))
+	f.write(" ; ".join(l)+"\t")
 	# f.write(" ; ".join([str(full_entities.index(a)) + " " + str(relations[b]) + " " + str(full_entities.index(c)) for (a,b,c) in our_graph_edges if (a in full_entities and c in full_entities)]) + "\t")
-	for ent in list(set(selected_ents)):
+	for ent in selected_ents:
 		st_ind = final_sentence.find(' '+ent+' ')
-		final_sentence = final_sentence[:st_ind]+ " <garbage_" + str(selected_ents.index(ent)) + "> " +final_sentence[st_ind+len(ent)+2:]
+		while(st_ind != -1):
+			final_sentence = final_sentence[:st_ind]+ " <garbage_" + str(full_entities.index(ent)) + "> " +final_sentence[st_ind+len(ent)+2:]
+			st_ind = final_sentence.find(' '+ent+' ')
 	f.write(final_sentence+"\t") #Atishyas work
 	f.write("0 -1 0 -1 0 -1 0\n")
 
