@@ -13,6 +13,6 @@ save/
 -lrhigh
 0.25
 -data
-cur_data_small.train.tsv
+cur_data.train.tsv
 -gpu
 -1

@@ -52,8 +52,9 @@ class dataset:
     for y in x:
       #import pdb; pdb.set_trace()
       if len(y) < 2:
-            print (y)
-      rel.extend([y[1]+3,y[1]+3+self.REL.size])
+        print (y)
+      tmp = [y[1]+3,y[1]+3+self.REL.size]
+      rel.extend(tmp)
       a = y[0]
       b = y[2]
       c = ent+len(rel)-2
