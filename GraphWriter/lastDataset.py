@@ -50,6 +50,9 @@ class dataset:
     for i in range(adjsize):
       adj[i,i]=1
     for y in x:
+      #import pdb; pdb.set_trace()
+      if len(y) < 2:
+            print (y)
       rel.extend([y[1]+3,y[1]+3+self.REL.size])
       a = y[0]
       b = y[2]
