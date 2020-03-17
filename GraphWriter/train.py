@@ -30,7 +30,10 @@ def train(m,o,ds,args):
       if count%100==99:
         print(ex,"of like 40k -- current avg loss ",(loss/ex))
       b = ds.fixBatch(b)
-      p,z,planlogits = m(b)
+      try:
+            p,z,planlogits = m(b)
+      except:
+            import pdb; pdb.set_trace()
       p = p[:,:-1,:].contiguous()
 
       tgt = b.tgt[:,1:].contiguous().view(-1).to(args.device)
