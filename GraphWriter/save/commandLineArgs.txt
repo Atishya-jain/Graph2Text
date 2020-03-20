@@ -1,11 +1,11 @@
 -save
 save/
 -t1size
-24
+1
 -t2size
-16
+1
 -t3size
-4
+1
 -lrstep
 5
 -lr
@@ -13,6 +13,6 @@ save/
 -lrhigh
 0.25
 -data
-cur_data.train.tsv
+cur_data_filter.train.tsv
 -gpu
 -1

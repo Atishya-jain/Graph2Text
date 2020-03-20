@@ -6,7 +6,7 @@ with open('../GraphWriter/data/cur_data.train.tsv') as f:
 	for line in l:
 		parts = line.split('\t')
 		length = len(parts[3].split(';'))
-		if length > 300:
+		if length > 200:
 			count += 1
 		else:
 			print(line, file=f2, end='')
