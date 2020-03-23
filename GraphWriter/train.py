@@ -9,74 +9,73 @@ from lastDataset import dataset
 from pargs import pargs,dynArgs
 from models.newmodel import model
 
-def update_lr(o,args,epoch):
+def update_lr(optimiser,args,epoch):
   if epoch%args.lrstep == 0:
-    o.param_groups[0]['lr'] = args.lrhigh
+    optimiser.param_groups[0]['lr'] = args.lrhigh
   else:
-    o.param_groups[0]['lr'] -= args.lrchange
+    optimiser.param_groups[0]['lr'] -= args.lrchange
   
   
-def train(m,o,ds,args):
+def train(model,optimiser,dataset,args):
   print("Training",end="\t")
   loss = 0
   ex = 0
-  trainorder = [('1',ds.t1_iter),('2',ds.t2_iter),('3',ds.t3_iter)]
+  trainorder = [('1',dataset.t1_iter),('2',dataset.t2_iter),('3',dataset.t3_iter)]
   #trainorder = reversed(trainorder)
   shuffle(trainorder)
   for spl, train_iter in trainorder:
     print(spl)
-    for count,b in enumerate(train_iter):
+    for count, batch in enumerate(train_iter):
       #print(count)
       if count%100==99:
         print(ex,"of like 40k -- current avg loss ",(loss/ex))
-      b = ds.fixBatch(b)
+      batch = dataset.fixBatch(batch)
       try:
-            p,z,planlogits = m(b)
-      except:
-            import pdb; pdb.set_trace()
-      p = p[:,:-1,:].contiguous()
+        # returns probability of generate words concatenated with copy words, probability of copy
+        preds, z, _ = model(batch)
+      except Exception as e:
+        print(e)
+        import pdb; pdb.set_trace()
+      preds = preds[:,:-1,:].contiguous()
 
-      tgt = b.tgt[:,1:].contiguous().view(-1).to(args.device)
-      l = F.nll_loss(p.contiguous().view(-1,p.size(2)),tgt,ignore_index=1)
+      tgt = batch.tgt[:,1:].contiguous().view(-1).to(args.device)
+      l = F.nll_loss(preds.contiguous().view(-1, preds.size(2)), tgt, ignore_index=1)
       #copy coverage (each elt at least once)
       if args.cl:
         z = z.max(1)[0]
         cl = nn.functional.mse_loss(z,torch.ones_like(z))
         l = l + args.cl*cl
-      if args.plan:
-        pl = nn.functional.cross_entropy(planlogits.view(-1,planlogits.size(2)),b.sordertgt[0].view(-1),ignore_index=1)
-        l = l+ args.plweight*pl
         
       l.backward()
-      nn.utils.clip_grad_norm_(m.parameters(),args.clip)
-      loss += l.item() * len(b.tgt)
-      o.step()
-      o.zero_grad()
-      ex += len(b.tgt)
+      nn.utils.clip_grad_norm_(model.parameters(),args.clip)
+      loss += l.item() * len(batch.tgt)
+      optimiser.step()
+      optimiser.zero_grad()
+      ex += len(batch.tgt)
   loss = loss/ex 
   print("AVG TRAIN LOSS: ",loss,end="\t")
   if loss < 100: print(" PPL: ",exp(loss))
 
-def evaluate(m,ds,args):
+def evaluate(model,dataset,args):
   print("Evaluating",end="\t")
-  m.eval()
+  model.eval()
   loss = 0
   ex = 0
-  for b in ds.val_iter:
-    b = ds.fixBatch(b)
-    p,z,planlogits = m(b)
+  for batch in dataset.val_iter:
+    batch = dataset.fixBatch(batch)
+    p, z, _ = model(batch)
     p = p[:,:-1,:]
-    tgt = b.tgt[:,1:].contiguous().view(-1).to(args.device)
+    tgt = batch.tgt[:,1:].contiguous().view(-1).to(args.device)
     l = F.nll_loss(p.contiguous().view(-1,p.size(2)),tgt,ignore_index=1)
     if ex == 0:
       g = p[0].max(1)[1]
-      print(ds.reverse(g,b.rawent[0]))
-    loss += l.item() * len(b.tgt)
-    ex += len(b.tgt)
+      print(dataset.reverse(g,batch.rawent[0]))
+    loss += l.item() * len(batch.tgt)
+    ex += len(batch.tgt)
   loss = loss/ex
   print("VAL LOSS: ",loss,end="\t")
   if loss < 100: print(" PPL: ",exp(loss))
-  m.train()
+  model.train()
   return loss
 
 def main(args):
@@ -85,21 +84,15 @@ def main(args):
     input("Save File Exists, OverWrite? <CTL-C> for no")
   except:
     os.mkdir(args.save)
-  ds = dataset(args)
-  args = dynArgs(args,ds)
-  m = model(args)
+  dataset = dataset(args)
+  args = dynArgs(args, dataset)
+  model = model(args)
   print(args.device)
-  m = m.to(args.device)
+  model = model.to(args.device)
+  
   if args.ckpt:
-    '''
-    with open(args.save+"/commandLineArgs.txt") as f:
-      clargs = f.read().strip().split("\n") 
-      argdif =[x for x in sys.argv[1:] if x not in clargs]
-      assert(len(argdif)==2); 
-      assert([x for x in argdif if x[0]=='-']==['-ckpt'])
-    '''
     cpt = torch.load(args.ckpt)
-    m.load_state_dict(cpt)
+    model.load_state_dict(cpt)
     starte = int(args.ckpt.split("/")[-1].split(".")[0])+1
     args.lr = float(args.ckpt.split("-")[-1])
     print('ckpt restored')
@@ -107,23 +100,23 @@ def main(args):
     with open(args.save+"/commandLineArgs.txt",'w') as f:
       f.write("\n".join(sys.argv[1:]))
     starte=0
-  o = torch.optim.SGD(m.parameters(),lr=args.lr, momentum=0.9)
+  optimiser = torch.optim.SGD(model.parameters(),lr=args.lr, momentum=0.9)
 
   # early stopping based on Val Loss
   lastloss = 1000000
   
   for e in range(starte,args.epochs):
-    print("epoch ",e,"lr",o.param_groups[0]['lr'])
-    train(m,o,ds,args)
-    vloss = evaluate(m,ds,args)
+    print("epoch ",e,"lr",optimiser.param_groups[0]['lr'])
+    train(model,optimiser,dataset,args)
+    vloss = evaluate(model,dataset,args)
     if args.lrwarm:
-      update_lr(o,args,e)
+      update_lr(optimiser,args,e)
     print("Saving model")
-    torch.save(m.state_dict(),args.save+"/"+str(e)+".vloss-"+str(vloss)[:8]+".lr-"+str(o.param_groups[0]['lr']))
+    torch.save(model.state_dict(),args.save+"/"+str(e)+".vloss-"+str(vloss)[:8]+".lr-"+str(optimiser.param_groups[0]['lr']))
     if vloss > lastloss:
       if args.lrdecay:
         print("decay lr")
-        o.param_groups[0]['lr'] *= 0.5
+        optimiser.param_groups[0]['lr'] *= 0.5
     lastloss = vloss
         
 

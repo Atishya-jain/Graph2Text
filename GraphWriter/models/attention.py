@@ -80,7 +80,6 @@ class BahdanauAttention(nn.Module):
 
         return total_context, alignment_score
 
-
 class LuongAttention(nn.Module):
     _SCORE_FN = {
         "dot": "_dot_score",
@@ -204,7 +203,6 @@ class LuongAttention(nn.Module):
     @property
     def attention_window_size(self):
         return self._attention_window_size
-
 
 class MultiHeadAttention(nn.Module):
     def __init__(self,

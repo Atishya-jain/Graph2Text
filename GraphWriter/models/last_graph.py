@@ -2,9 +2,7 @@ import torch
 import math
 from torch import nn
 from torch.nn import functional as F
-from models.graphAttn import GAT
 from models.attention import MultiHeadAttention
-
 
 def gelu(x):
   return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
