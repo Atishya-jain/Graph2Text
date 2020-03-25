@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from models.attention import MultiHeadAttention, MatrixAttn
-from models.list_encoder import list_encode
+from models.list_encoder import list_encode, lseq_encode
 from models.last_graph import graph_encode
 from models.beam import Beam
 
@@ -21,8 +21,15 @@ class model(nn.Module):
     print(args.model)
     if self.graph:
       self.graph_encode = graph_encode(args)
+    if args.title:
+      self.tenc = lseq_encode(args,toks=args.ninput)
+      self.attn2 = MultiHeadAttention(args.hsz,args.hsz,args.hsz,h=4,dropout_p=args.drop)
+      self.mix = nn.Linear(args.hsz,1)
 
   def forward(self,batch):
+    if self.args.title:
+      tencs,_ = self.tenc(b.src)
+      tmask = self.maskFromList(tencs.size(),b.src[1]).unsqueeze(1)
     outp,_ = batch.out
     ents = batch.ent
     entlens = ents[2]
@@ -37,12 +44,20 @@ class model(nn.Module):
 
     cx = torch.tensor(hx)
     a = torch.zeros_like(hx) #self.attn(hx.unsqueeze(1),keys,mask=mask).squeeze(1)
+    if self.args.title:
+      a2 = self.attn2(hx.unsqueeze(1),tencs,mask=tmask).squeeze(1)
+      a = torch.cat((a,a2),1)
+
     e = self.emb(outp).transpose(0,1)
     outputs = []
     for i, k in enumerate(e):
       prev = torch.cat((a,k), 1)
       hx, cx = self.lstm(prev, (hx, cx))
       a = self.attn(hx.unsqueeze(1), keys, mask=mask).squeeze(1)
+      if self.args.title:
+        a2 = self.attn2(hx.unsqueeze(1),tencs,mask=tmask).squeeze(1)
+        a = torch.cat((a,a2),1)
+
       out = torch.cat((hx, a), 1)
       outputs.append(out)
     l = torch.stack(outputs, 1)
@@ -76,6 +91,9 @@ class model(nn.Module):
     return outp
 
   def beam_generate(self,batch,beamsz,k):
+    if self.args.title:
+      tencs,_ = self.tenc(b.src)
+      tmask = self.maskFromList(tencs.size(),b.src[1]).unsqueeze(1)
     ents = batch.ent
     entlens = ents[2]
     ents = self.list_encode(ents)
@@ -89,6 +107,9 @@ class model(nn.Module):
 
     cx = torch.tensor(hx)
     a = self.attn(hx.unsqueeze(1),keys,mask=mask).squeeze(1)
+    if self.args.title:
+      a2 = self.attn2(hx.unsqueeze(1),tencs,mask=tmask).squeeze(1)
+      a = torch.cat((a,a2),1)
     outputs = []
     outp = torch.LongTensor(ents.size(0),1).fill_(self.starttok)
     beam = None
@@ -98,6 +119,9 @@ class model(nn.Module):
       prev = torch.cat((a,op),1)
       hx,cx = self.lstm(prev,(hx,cx))
       a = self.attn(hx.unsqueeze(1),keys,mask=mask).squeeze(1)
+      if self.args.title:
+        a2 = self.attn2(hx.unsqueeze(1),tencs,mask=tmask).squeeze(1)
+        a = torch.cat((a,a2),1)
 
       l = torch.cat((hx,a),1).unsqueeze(1)
       s = torch.sigmoid(self.switch(l))
@@ -122,6 +146,9 @@ class model(nn.Module):
         beam.eostok = self.eostok
         keys = keys.repeat(len(beam.beam),1,1)
         mask = mask.repeat(len(beam.beam),1,1)
+        if self.args.title:
+          tencs = tencs.repeat(len(beam.beam),1,1)
+          tmask = tmask.repeat(len(beam.beam),1,1)
 
         ents = ents.repeat(len(beam.beam),1,1)
         entlens = entlens.repeat(len(beam.beam))
@@ -130,7 +157,10 @@ class model(nn.Module):
           break
         keys = keys[:len(beam.beam)]
         mask = mask[:len(beam.beam)]
-        ents = ents[:len(beam.beam)]
+        if self.args.title:
+          tencs = tencs[:len(beam.beam)]
+          tmask = tmask[:len(beam.beam)]
+      ents = ents[:len(beam.beam)]
         entlens = entlens[:len(beam.beam)]
       outp = beam.getwords()
       hx = beam.geth()
