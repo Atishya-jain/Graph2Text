@@ -84,15 +84,15 @@ def main(args):
     input("Save File Exists, OverWrite? <CTL-C> for no")
   except:
     os.mkdir(args.save)
-  dataset = dataset(args)
-  args = dynArgs(args, dataset)
-  model = model(args)
+  dset = dataset(args)
+  args = dynArgs(args, dset)
+  model_instance = model(args)
   print(args.device)
-  model = model.to(args.device)
+  model_instance = model_instance.to(args.device)
   
   if args.ckpt:
     cpt = torch.load(args.ckpt)
-    model.load_state_dict(cpt)
+    model_instance.load_state_dict(cpt)
     starte = int(args.ckpt.split("/")[-1].split(".")[0])+1
     args.lr = float(args.ckpt.split("-")[-1])
     print('ckpt restored')
@@ -100,19 +100,19 @@ def main(args):
     with open(args.save+"/commandLineArgs.txt",'w') as f:
       f.write("\n".join(sys.argv[1:]))
     starte=0
-  optimiser = torch.optim.SGD(model.parameters(),lr=args.lr, momentum=0.9)
+  optimiser = torch.optim.SGD(model_instance.parameters(),lr=args.lr, momentum=0.9)
 
   # early stopping based on Val Loss
   lastloss = 1000000
   
   for e in range(starte,args.epochs):
     print("epoch ",e,"lr",optimiser.param_groups[0]['lr'])
-    train(model,optimiser,dataset,args)
-    vloss = evaluate(model,dataset,args)
+    train(model_instance,optimiser,dset,args)
+    vloss = evaluate(model_instance,dset,args)
     if args.lrwarm:
       update_lr(optimiser,args,e)
     print("Saving model")
-    torch.save(model.state_dict(),args.save+"/"+str(e)+".vloss-"+str(vloss)[:8]+".lr-"+str(optimiser.param_groups[0]['lr']))
+    torch.save(model_instance.state_dict(),args.save+"/"+str(e)+".vloss-"+str(vloss)[:8]+".lr-"+str(optimiser.param_groups[0]['lr']))
     if vloss > lastloss:
       if args.lrdecay:
         print("decay lr")
