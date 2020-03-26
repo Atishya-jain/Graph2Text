@@ -92,7 +92,7 @@ class dataset:
     # specials = "method material otherscientificterm metric task".split(" ")
     specials = "garbage".split(" ")
     for x in specials:
-      for y in range(100):
+      for y in range(50):
         s = "<"+x+"_"+str(y)+">"
         self.TGT.vocab.stoi[s] = len(self.TGT.vocab.itos)+y
     self.NERD.build_vocab(train,min_freq=0)
